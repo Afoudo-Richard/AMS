@@ -1,0 +1,9 @@
+- Create and Scaffold database models ---- Done
+- Make sure user can login and logout of the system 
+- List, create and delete class --- 
+- List, create and delete students
+- List, create and delete Management
+- List, create and delete Courses
+- List, create and delete attendance for a Courses
+- Ensure that upload admin uploads a picture with a single face in it.
+- Ensure one can take attendance for a course or course topic through facial recognition.

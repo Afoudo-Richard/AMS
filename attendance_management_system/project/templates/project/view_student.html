@@ -1,0 +1,67 @@
+{% extends 'project/main.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="h-full ml-14 mt-14 mb-10 md:ml-64">
+
+    <div class="mt-4 mx-4">
+        <h2 class="text-lg md:text-2xl font-medium">{{student.firstname}} {{student.lastname}}</h2>
+    </div>
+    <!-- Client Table -->
+    <div class="mt-4 mx-4 flex gap-2">
+        <div class=" rounded-md shadow-sm px-2 py-4 w-1/2">
+            <ul>
+                <li class="text-lg mb-2">FirstName: <span class="ml-5 text-gray-500">{{student.firstname}}</span></li>
+                <li class="text-lg mb-2">Lastname: <span class="ml-5 text-gray-500">{{student.lastname}}</span></li>
+                <li class="text-lg mb-2">Email: <span class="ml-5 text-gray-500">{{student.email}}</span></li>
+                <li class="text-lg mb-2">Phone: <span class="ml-5 text-gray-500">{{student.phone}}</span></li>
+                <li class="text-lg mb-2">Sex: <span class="ml-5 text-gray-500">{{student.sex}}</span></li>
+                <li class="text-lg mb-2">Department: <span class="ml-5 text-gray-500">{{student.department.name}}</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class=" rounded-md shadow-sm px-2 py-4 w-1/2">
+            <h2 class="text-lg md:text-2xl font-medium mb-3">Student Images</h2>
+
+            <div class="mb-3">
+                <a href="{% url 'add_student_images' student.id %}"
+                    class="inline-block px-4 py-2 rounded-md bg-green-500 text-sm text-white">Add Image(s)</a>
+            </div>
+
+            {% for message in messages %}
+                <div class="mt-4 px-3 py-2 bg-gray-700 text-black">
+                    <p>{{message}}</p>
+                </div>
+            {% endfor %}
+
+            <div class="flex flex-wrap gap-4">
+
+                {% for student_image in student.all_student_images %}
+
+                <div class="w-40">
+                    <div class="w-full h-40 rounded-lg overflow-hidden bg-green-500">
+                        <img class="w-full h-auto" src="/static/images/{{student_image.picture}}" alt="">
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <form action="{% url 'delete_student_image' student.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="image_location" value="{{student_image.picture}}">
+                            <input type="hidden" name="image_id" value="{{student_image.id}}">
+                            <button
+                                class="inline-block px-4 py-2 rounded-md bg-red-500 text-sm text-white">Delete</button>
+                        </form>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+    <!-- ./Client Table -->
+
+</div>
+
+{% endblock %}

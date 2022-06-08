@@ -1,0 +1,60 @@
+{% extends 'project/main.html' %}
+
+{% block content %}
+
+<div class="h-full ml-14 mt-14 mb-10 md:ml-64">
+
+    <div class="mt-4 mx-4">
+        <h2 class="text-lg md:text-2xl font-medium">Take Attendance</h2>
+
+        <div class="mb-3 mt-3">
+            <a href="{% url 'add_student' %}" class="inline-block px-4 py-2 rounded-md bg-green-500 text-sm text-white">Use Face Recognition</a>
+        </div>
+    </div>
+
+    <!-- Client Table -->
+    <div class="mt-4 mx-4" x-data="{present_students : []}">
+        <div class="w-full overflow-hidden rounded-lg shadow-xs">
+            <div class="w-full overflow-x-auto">
+                <span>present students : <span x-text="present_students"></span></span>
+                <table class="w-full">
+                    <thead>
+                        <tr
+                            class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                            <th class="px-4 py-3">Name</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Sex</th>
+                            <th class="px-4 py-3">Phone</th>
+                            <th class="px-4 py-3">Department</th>
+                            <th class="px-4 py-3">Tick Attendance</th>
+
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
+
+                        {% for student in students %}
+                            <tr
+                                class="bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-400">
+                                <td class="px-4 py-3 font-semibold">{{student.firstname}} {{student.lastname}}</td>
+                                <td class="px-4 py-3 text-sm">{{student.email}}</td>
+                                <td class="px-4 py-3 text-sm">{{student.sex}}</td>
+                                <td class="px-4 py-3 text-sm">{{student.phone}}</td>
+                                <td class="px-4 py-3 text-sm">{{student.department.name}}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    <input type="checkbox" value="{{student.id}}" x-model="present_students">
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+                        
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    <!-- ./Client Table -->
+
+</div>
+
+{% endblock %}

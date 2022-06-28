@@ -9,7 +9,7 @@
         <h2 class="text-lg md:text-2xl font-medium text-center">{{ course.name }}</h2>
 
         <div class="mb-3 mt-3">
-            <a href="{% url 'add_student' %}" class="inline-block px-4 py-2 rounded-md bg-green-500 text-sm text-white">Add Course Topic</a>
+            <a href="{% url 'add_course_topic' course.id %}" class="inline-block px-4 py-2 rounded-md bg-green-500 text-sm text-white">Add Course Topic</a>
         </div>
     </div>
 
@@ -52,7 +52,7 @@
                                 </td>
 
                                 <td class="px-4 py-3 text-sm">
-                                    <a href="" class="inline-block px-4 py-2 rounded-md bg-blue-500 text-sm text-white">View Attendance</a>
+                                    <a href="{% url 'view_attendance' course_topic.id %}" class="inline-block px-4 py-2 rounded-md bg-blue-500 text-sm text-white">View Attendance</a>
                                 </td>
 
                             </tr>

@@ -2,6 +2,7 @@ import email
 import profile
 from unicodedata import name
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -32,6 +33,7 @@ class Course(models.Model):
 
     def total_students(self):
         return self.student_set.all().count()
+        
     def total_course_topics(self):
         return self.coursetopic_set.all().count()
 
@@ -43,7 +45,7 @@ class CourseTopic(models.Model):
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    comment = models.CharField(max_length=300)
+    comment = models.CharField(max_length=300, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -54,6 +56,7 @@ class Student(models.Model):
         ("Male", "Male"),
         ('Female', "Female"),
     )
+    #user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
     firstname = models.CharField(max_length=200)
     lastname = models.CharField(max_length=200)
@@ -77,11 +80,10 @@ class StudentImages(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
 
 class Attendance(models.Model):
-    course = models.ForeignKey(Course, null=True ,on_delete=models.SET_NULL)
+    course= models.ForeignKey(Course, null=True ,on_delete=models.SET_NULL)
+    course_topic = models.ForeignKey(CourseTopic, null=True ,on_delete=models.SET_NULL)
     student = models.ForeignKey(Student, null=True, on_delete=models.SET_NULL)
     date_created = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self) -> str:
-        return self.firstname
     
     

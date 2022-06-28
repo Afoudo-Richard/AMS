@@ -1,0 +1,59 @@
+{% extends 'project/main.html' %}
+
+{% block content %}
+
+<div class="h-full ml-14 mt-14 mb-10 md:ml-64">
+
+    <div class="mt-4 mx-4">
+        <h2 class="text-lg md:text-2xl font-medium">Add Course Topic</h2>
+    </div>
+
+   
+    <div class="mt-4 mx-4">
+        <form class="p-6 flex flex-col justify-center" method="POST" action="">
+            {% csrf_token %}
+            <div class="flex flex-col">
+                <label for="course" >Course</label>
+                <p class="t text-gray-400 text-xl mb-3">{{course.name}}</p>
+                <input type="hidden" name="course" id="firstname" placeholder="{{course.name}}"
+                    class="w-100 mt-2 py-3 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-50 font-semibold focus:border-blue-500 focus:outline-none" value="{{course.id}}" />
+            </div>
+
+            <div class="flex flex-col">
+                <label for="topic" >Topic</label>
+                <input type="text" name="topic" id="topic" placeholder="Enter Topic" required
+                class="w-100 mt-2 py-3 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-50 font-semibold focus:border-blue-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col">
+                <label for="date" >Date</label>
+                <input type="date" name="date" id="date" placeholder="Date" required
+                class="w-100 mt-2 py-3 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-50 font-semibold focus:border-blue-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col mt-2">
+                <label for="start_time">Start time</label>
+                <input type="time" name="start_time" required
+                    class="w-100 mt-2 py-3 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-50 font-semibold focus:border-blue-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col mt-2">
+                <label for="start_time">End time</label>
+                <input type="time" name="end_time" required
+                    class="w-100 mt-2 py-3 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-50 font-semibold focus:border-blue-500 focus:outline-none" />
+            </div>
+
+            <div class="flex flex-col mt-2">
+                <label for="comment">Comment</label>
+                <input type="tel" name="comment" id="tel" placeholder="Short comment" required
+                    class="w-100 mt-2 py-3 px-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-gray-800 dark:text-gray-50 font-semibold focus:border-blue-500 focus:outline-none" />
+            </div>
+
+            <button type="submit"
+                class="md:w-32 bg-blue-600 dark:bg-gray-100 text-white dark:text-gray-800 font-bold py-3 px-6 rounded-lg mt-4 hover:bg-blue-500 dark:hover:bg-gray-200 transition ease-in-out duration-300">Submit</button>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

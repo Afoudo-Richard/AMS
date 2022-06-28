@@ -8,6 +8,7 @@ from django.contrib import messages
 from attendance_management_system.settings import MEDIA_ROOT
 from .models import *
 from .forms import *
+from .decorators import *
 
 import face_recognition
 import os
@@ -25,34 +26,77 @@ MODEL = "cnn" #hog
 
 
 # Create your views here.
-
+@unauthenticated_user
 def index(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            messages.info(request, "Username or Password is incorrect")
     return render(request, 'project/login.html')
 
+def logoutUser(request):
+    logout(request)
+    return redirect('login')
+
+@login_required()
+@admin_only
 def dashboard(request):
+    departments = Department.objects.all()
+    courses = Course.objects.all()
+    students = Student.objects.all()
+    context = {
+        'total_departments': departments.count(),
+        'total_courses': courses.count(),
+        'total_students': students.count()
+    }
+    return render(request, 'project/dashboard.html', context)
+
+@login_required()
+@allowed_users(allowed_roles=['student'])
+def user_dashboard(request):
+    departments = Department.objects.all()
+    courses = Course.objects.all()
+    context = {
+        'total_departments': departments.count(),
+        'total_courses': courses.count(),
+    }
+    return render(request, 'project/user_dashboard.html', context)
+
+@login_required()
+@allowed_users(allowed_roles=['staff'])   
+def departments(request):
     departments = Department.objects.all()
     context = {
         'departments': departments
     }
-    return render(request, 'project/dashboard.html', context)
+    return render(request, 'project/departments.html', context)
 
-def logout(request):
-    logout(request)
-    return redirect('login')
-
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def take_attendance(request, course_id, course_topic_id):
-    # course = Course.objects.get(id = course_id)
+    course = Course.objects.get(id = course_id)
     # all_students_in_course = course.student_set.all()
 
     # this is thesame as the code above but in one line.
     all_students_in_course = Student.objects.filter(courses__id = course_id)
     
     context = {
+        'course_id': course_id,
+        'course_topic_id': course_topic_id,
         'students': all_students_in_course,
     }
 
     return render(request, 'project/take_attendance.html', context)
 
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def attendance(request, course_id, course_topic_id):
     all_students_in_course = Student.objects.filter(courses__id = course_id)
     
@@ -63,6 +107,8 @@ def attendance(request, course_id, course_topic_id):
 
     return render(request, 'project/attendance.html', context)
 
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def courses(request):
     courses = Course.objects.all()
     context = {
@@ -70,6 +116,8 @@ def courses(request):
     }
     return render(request, 'project/courses.html', context)
 
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def course_topic(request, pk):
     course = Course.objects.get(id=pk)
     course_topics = course.coursetopic_set.all()
@@ -83,6 +131,8 @@ def course_topic(request, pk):
 
     return render(request, 'project/course_topics.html', context)
 
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def students(request):
     students = Student.objects.all()
     context = {
@@ -90,7 +140,8 @@ def students(request):
     }
 
     return render(request, 'project/students.html', context)
-
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def view_student(request, pk):
     student = Student.objects.get(id=pk)
 
@@ -100,18 +151,71 @@ def view_student(request, pk):
 
     return render(request, 'project/view_student.html', context)
 
+@login_required()
+@allowed_users(allowed_roles=['staff'])
 def add_student(request):
     if request.method == 'POST':
         form = StudentForm(request.POST)
         if form.is_valid():
             student = form.save()
             return redirect(f'/student/{student.id}')
+        context = {
+            'form': form
+        }
     else:
         form = StudentForm()
         context = {
             'form': form
         }
     return render(request, 'project/forms/student_form.html', context)
+
+
+@login_required()
+@allowed_users(allowed_roles=['staff'])
+def add_department(request):
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            student = form.save()
+            return redirect('departments')
+    else:
+        form = DepartmentForm()
+        context = {
+            'form': form
+        }
+    return render(request, 'project/forms/department_form.html', context)
+
+@login_required()
+@allowed_users(allowed_roles=['staff'])
+def add_courses(request):
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            student = form.save()
+            return redirect('courses')
+    else:
+        form = CourseForm()
+        context = {
+            'form': form
+        }
+    return render(request, 'project/forms/course_form.html', context)
+
+@login_required()
+@allowed_users(allowed_roles=['staff'])
+def add_course_topic(request, pk):
+    course = Course.objects.get(id=pk)
+    if request.method == 'POST':
+        form = CourseTopicForm(request.POST)
+        if form.is_valid():
+            courseTopic = form.save()
+            return redirect(f'/course_topics/{course.id}')
+    else:
+        form = CourseTopicForm()
+        context = {
+            'course': course,
+            'form': form,
+        }
+    return render(request, 'project/forms/course_topic_form.html', context)
 
 def face_count(imagelocation):
     image = face_recognition.load_image_file(imagelocation)
@@ -201,124 +305,46 @@ def delete_student_image(request, pk):
             print("Could not delete file")
         return redirect(f'/student/{student.id}')
         
-    
+def use_face_recognition(request, course_id, course_topic_id):
+    all_students_in_course = Student.objects.filter(courses__id = course_id)
+    course = Course.objects.get(id=course_id)
+    course_topic = CourseTopic.objects.get(id=course_topic_id)
 
+    student_image_folders_names = []
+    students_folder_path = MEDIA_ROOT + "/students/"
+    for student in all_students_in_course:
+        student_folder = student.firstname + "-" +str(student.id)
+        if os.path.exists(f'{students_folder_path}{student_folder}'):
+            student_image_folders_names.append(student_folder)
+    attendance_list = face_recog3(student_image_folders_names)
 
-def face_recog(request):
-    print(os.listdir(os.path.dirname(os.path.realpath(__file__)) + KNOWN_FACES_DIR))
-    known_faces = []
-    known_names = []
+    for student in attendance_list:
+        student_id = str(student).split('-')[1]
+        student = Student.objects.get(id=student_id)
+        attendance = Attendance(course = course, course_topic = course_topic, student = student)
+        attendance.save()
 
-    for name in os.listdir(PATH_OF_KNOWN_FACES):
-        for filename in os.listdir(f"{PATH_OF_KNOWN_FACES}/{name}"):
-            image = face_recognition.load_image_file(f"{PATH_OF_KNOWN_FACES}/{name}/{filename}")
-            print(f"{PATH_OF_KNOWN_FACES}/{name}/{filename}")
-            encoding = face_recognition.face_encodings(image)[0]
-            known_faces.append(encoding)
-            known_names.append(name)
-    
-    print("Processing unkwonw faces")
+    attendance = Attendance.objects.filter(course_topic__id = course_topic_id)
+    context = {
+        'all_attendance': attendance
+    }
+    return render(request, 'project/attendance_result.html',context)
 
-    for filename in os.listdir(PATH_OF_UNKNOWN_FACES):
-        image = face_recognition.load_image_file(f"{PATH_OF_UNKNOWN_FACES}/{filename}")
-        # locations = face_recognition.face_locations(image, model=MODEL)
-        locations = face_recognition.face_locations(image)
-
-        encoding = face_recognition.face_encodings(image, locations)
-
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-        for face_encoding, face_location in zip(encoding, locations):
-            results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
-
-            match = None
-
-            if True in results:
-               match =  known_names[results.index(True)]
-               print(f"Match found: {match}")
-
-               top_left = (face_location[3], face_location[0])
-               bottom_right =(face_location[1], face_location[2])
-
-               color = [0, 255, 0]
-
-               cv2.rectangle(image, top_left, bottom_right, color, FRAME_THICHNESS)
-
-               top_left = (face_location[3], face_location[2])
-               bottom_right =(face_location[1], face_location[2]+22)
-
-               cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
-               cv2.putText(image, match, (face_location[3]+10, face_location[2]+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,200,200),FONT_THICKNESS) 
-
-        cv2.imshow(filename, image)
-        cv2.waitKey(1000)
-        #cv2.destroyWindow(filename)
+def view_attendance(request, course_topic_id):
+    course_topic = CourseTopic.objects.get(id=course_topic_id)
+    attendance = Attendance.objects.filter(course_topic__id = course_topic_id)
+    context = {
+        'course_topic': course_topic,
+        'all_attendance': attendance
+    }
+    return render(request, 'project/attendance_result.html',context)
 
 
 
-    print("Hello world")
-    return HttpResponse()
+def face_recog3(student_faces_folder_names):
 
-def face_recog2(request):
-    video = cv2.VideoCapture(2)
-    known_faces = []
-    known_names = []
-
-    for name in os.listdir(PATH_OF_KNOWN_FACES):
-        for filename in os.listdir(f"{PATH_OF_KNOWN_FACES}/{name}"):
-            image = face_recognition.load_image_file(f"{PATH_OF_KNOWN_FACES}/{name}/{filename}")
-            print(f"{PATH_OF_KNOWN_FACES}/{name}/{filename}")
-            encoding = face_recognition.face_encodings(image)[0]
-            known_faces.append(encoding)
-            known_names.append(name)
-    
-    print("Processing unknown faces")
-    while True:
-        # image = face_recognition.load_image_file(f"{PATH_OF_UNKNOWN_FACES}/{filename}")
-        # locations = face_recognition.face_locations(image, model=MODEL)
-
-        ret, image = video.read()
-        locations = face_recognition.face_locations(image)
-
-        encoding = face_recognition.face_encodings(image, locations)
-
-        # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-
-        for face_encoding, face_location in zip(encoding, locations):
-            results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
-
-            match = None
-
-            if True in results:
-               match =  known_names[results.index(True)]
-               print(f"Match found: {match}")
-
-               top_left = (face_location[3], face_location[0])
-               bottom_right =(face_location[1], face_location[2])
-
-               color = [0, 255, 0]
-
-               cv2.rectangle(image, top_left, bottom_right, color, FRAME_THICHNESS)
-
-               top_left = (face_location[3], face_location[2])
-               bottom_right =(face_location[1], face_location[2]+22)
-
-               cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
-               cv2.putText(image, match, (face_location[3]+10, face_location[2]+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,200,200),FONT_THICKNESS) 
-
-        cv2.imshow(filename, image)
-        #cv2.waitKey(1000)
-        #cv2.destroyWindow(filename)
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-
-    print("Hello world")
-    return HttpResponse()
-
-def face_recog3(request):
+    # Student attendance variable
+    student_attendance = []
 
     known_face_encodings = [
         
@@ -333,10 +359,17 @@ def face_recog3(request):
     video_capture = cv2.VideoCapture(0)
 
     # change the name of the video frame
-    cv2.namedWindow("Face Recognition")
+    cv2.namedWindow("Taking Attendance with Face Recognition")
 
     # Load a sample picture and learn how to recognize it.
-    for name in os.listdir(path_to_unknown_faces):
+    # for name in os.listdir(path_to_unknown_faces):
+    #     for filename in os.listdir(f"{path_to_unknown_faces}/{name}"):
+    #         image = face_recognition.load_image_file(f"{path_to_unknown_faces}/{name}/{filename}")
+    #         encoding = face_recognition.face_encodings(image)[0]
+    #         known_face_encodings.append(encoding)
+    #         known_face_names.append(name)
+
+    for name in student_faces_folder_names:
         for filename in os.listdir(f"{path_to_unknown_faces}/{name}"):
             image = face_recognition.load_image_file(f"{path_to_unknown_faces}/{name}/{filename}")
             encoding = face_recognition.face_encodings(image)[0]
@@ -375,10 +408,13 @@ def face_recog3(request):
                     known_face_encodings, face_encoding, tolerance=0.55)
                 name = "Unknown"
 
-                # # If a match was found in known_face_encodings, just use the first one.
+                # If a match was found in known_face_encodings, just use the first one.
                 if True in matches:
                     first_match_index = matches.index(True)
                     name = known_face_names[first_match_index]
+
+                    if name not in student_attendance:
+                        student_attendance.append(name)
 
                     # video_capture.release()
                     # cv2.destroyAllWindows()
@@ -418,5 +454,4 @@ def face_recog3(request):
     video_capture.release()
     cv2.destroyAllWindows()
 
-    print("Hello world")
-    return HttpResponse()
+    return student_attendance

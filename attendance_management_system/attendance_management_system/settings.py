@@ -130,6 +130,8 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGIN_URL='/'
+
 TAILWIND_APP_NAME = 'theme'
 
 INTERNAL_IPS = [
